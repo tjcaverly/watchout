@@ -21,6 +21,25 @@ for (var i = 0; i<gameOptions.nEnemies; i++) {
 	enemies.push(data);
 }
 
+var moveEnemies = function() {
+
+	for (var i = 0; i < enemies.length; i++) {
+		enemies[i]['cx'] = Math.random()*gameOptions.width;
+		enemies[i]['cy'] = Math.random()*gameOptions.height;
+	};
+	update(enemies);
+}
+
+var update = function(data) {
+	gameBoard.selectAll('circle')
+					 .data(data)
+	         .transition()
+	         .duration(1000)
+					 .attr("cx", function(d){return d.cx;})
+					 .attr("cy", function(d){return d.cy;});
+
+}
+
 gameBoard.selectAll('circle').data(enemies)
 					.enter()
 					.append('circle')
@@ -28,3 +47,4 @@ gameBoard.selectAll('circle').data(enemies)
 					.attr("cy", function(d){return d.cy;})
 					.attr("r", 10);
 
+setInterval(moveEnemies, 1000);
