@@ -3,3 +3,14 @@
 /* Note: an asteroid image is included in this repo.
 Feel free to use it if you like. */
 
+body {
+	background-color: grey;
+
+}
+
+.container {
+	background-color: white;
+	margin-left: auto;
+	margin-right: auto;
+
+}
