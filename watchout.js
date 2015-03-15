@@ -12,8 +12,7 @@ var gameOptions = {
 
 // var scoreboardData = [0,0,0];
 
-var gameBoard = d3.select('.container')
-						.append('svg:svg')
+var gameBoard = d3.select('svg')
 						.attr("width", gameOptions.width)
 						.attr("height", gameOptions.height)
 						.style("background-color", "blue");
@@ -47,10 +46,10 @@ var drag = d3.behavior.drag()
 
         d.x = d3.event.x
         d.y = d3.event.y
-        d.x = Math.min(gameOptions.width, d.x)
-        d.y = Math.min(gameOptions.height, d.y)
-        d.x = Math.max(0, d.x)
-        d.y = Math.max(0, d.y)
+        d.x = Math.min(gameOptions.width-10, d.x)
+        d.y = Math.min(gameOptions.height-10, d.y)
+        d.x = Math.max(10, d.x)
+        d.y = Math.max(10, d.y)
         d3.select(this).attr("cx", d.x)
         .attr('cy', d.y);
     });
@@ -63,7 +62,14 @@ gameBoard.selectAll('circle.enemy').data(enemies)
 					.attr('class', 'enemy')
 					.attr("cx", function(d){return d.x;})
 					.attr("cy", function(d){return d.y;})
-					.attr("r", gameOptions.playerRadius);
+					.attr("r", gameOptions.playerRadius)
+         .style("fill", "transparent")       // this code works OK
+         .style("stroke", "black")     // displays small black dot
+         .style("stroke-width", 0)
+         .style("fill", "url(#image)")
+					//.append('image')
+					//.attr('xlink:href', 'asteroid.png')
+
 
 gameBoard.selectAll('circle.player').data([{x:100, y:100, r:gameOptions.playerRadius}])
 						.enter()
