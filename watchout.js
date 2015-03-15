@@ -27,8 +27,10 @@ for (var i = 0; i<gameOptions.nEnemies; i++) {
 							 });
 }
 
-var update = function() {
-	gameBoard.selectAll('circle.enemy')
+
+
+var update = function(pieces) {
+            pieces
 	         .transition()
 	         .duration(1000)
 					 .attr("cx", function(d){
@@ -38,7 +40,11 @@ var update = function() {
 					 .attr("cy", function(d){
 					 	var y = Math.random()*gameOptions.height;
 					 	d.y = y;
-					 	return y;});
+					 	return y;})
+           .each('end', function() {
+                    update(d3.select(this));
+           })
+           
 
 }
 var drag = d3.behavior.drag()
@@ -63,12 +69,10 @@ gameBoard.selectAll('circle.enemy').data(enemies)
 					.attr("cx", function(d){return d.x;})
 					.attr("cy", function(d){return d.y;})
 					.attr("r", gameOptions.playerRadius)
-         .style("fill", "transparent")       // this code works OK
-         .style("stroke", "black")     // displays small black dot
+         .style("fill", "transparent")         
          .style("stroke-width", 0)
          .style("fill", "url(#image)")
-					//.append('image')
-					//.attr('xlink:href', 'asteroid.png')
+
 
 
 gameBoard.selectAll('circle.player').data([{x:100, y:100, r:gameOptions.playerRadius}])
@@ -88,7 +92,6 @@ var collision = function(c1, c2) {
 }
 
 
-setInterval(update, 1000);
 
 d3.select('body').select('.scoreboard')
                  .style('position', 'relative')
@@ -105,6 +108,8 @@ d3.select('.container').style('margin-top','40px')
                        .style('width','700px')
                        .style('position','relative')
                        .style('padding','40px');
+
+var enemiesList = gameBoard.selectAll('circle.enemy');
 
 d3.select('.high').data([{highscore:0}])
 									//.attr('highscore', function(d) {return d.highscore;})
@@ -168,10 +173,8 @@ d3.timer(function(){
   	gameOptions.colliding = false;
   }
 
-	
-
-
 });
 
+update(enemiesList);
 
 
