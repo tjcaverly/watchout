@@ -10,6 +10,13 @@ var gameOptions = {
 	colliding: false
 }
 
+gameStats = {
+  colliding: false,
+  currentScore: 0,
+  highScore: 0,
+  collisions: 0
+}
+
 // var scoreboardData = [0,0,0];
 
 var gameBoard = d3.select('svg')
@@ -17,50 +24,7 @@ var gameBoard = d3.select('svg')
 						.attr("height", gameOptions.height)
 						.style("background-color", "blue");
 
-var enemies = [];
-
-for (var i = 0; i<gameOptions.nEnemies; i++) {
-	enemies.push({index:i, 
-								x:Math.random()*gameOptions.width,
-							 	y:Math.random()*gameOptions.width,
-							 	r:gameOptions.enemyRadius
-							 });
-}
-
-
-
-var update = function(pieces) {
-            pieces
-	         .transition()
-	         .duration(1000)
-					 .attr("cx", function(d){
-					 	var x = Math.random()*gameOptions.width;
-					 	d.x = x;
-					 	return x;})
-					 .attr("cy", function(d){
-					 	var y = Math.random()*gameOptions.height;
-					 	d.y = y;
-					 	return y;})
-           .each('end', function() {
-                    update(d3.select(this));
-           })
-           
-
-}
-var drag = d3.behavior.drag()
-    .on("drag", function(d,i) {
-
-        d.x = d3.event.x
-        d.y = d3.event.y
-        d.x = Math.min(gameOptions.width-10, d.x)
-        d.y = Math.min(gameOptions.height-10, d.y)
-        d.x = Math.max(10, d.x)
-        d.y = Math.max(10, d.y)
-        d3.select(this).attr("cx", d.x)
-        .attr('cy', d.y);
-    });
-
-
+var enemies = d3.range(gameOptions.nEnemies);
 
 gameBoard.selectAll('circle.enemy').data(enemies)
 					.enter()
@@ -75,6 +39,18 @@ gameBoard.selectAll('circle.enemy').data(enemies)
 
 
 
+var drag = d3.behavior.drag()
+    .on("drag", function(d,i) {
+        d.x = d3.event.x
+        d.y = d3.event.y
+        d.x = Math.min(gameOptions.width-10, d.x)
+        d.y = Math.min(gameOptions.height-10, d.y)
+        d.x = Math.max(10, d.x)
+        d.y = Math.max(10, d.y)
+        d3.select(this).attr("cx", d.x)
+        .attr('cy', d.y);
+    });
+
 gameBoard.selectAll('circle.player').data([{x:100, y:100, r:gameOptions.playerRadius}])
 						.enter()
 						.append('circle')
@@ -82,15 +58,8 @@ gameBoard.selectAll('circle.player').data([{x:100, y:100, r:gameOptions.playerRa
 						.attr("cx", function(d){return d.x;})
 						.attr("cy", function(d){return d.y;})
 						.attr("r", function(d){return d.r;})
-						.attr("fill", "red")
+						.attr("fill", "green")
 						.call(drag);
-
-var collision = function(c1, c2) {
-
-	var dist = Math.sqrt( Math.pow( (c1.x - c2.x), 2) + Math.pow( (c1.y - c2.y), 2) );
-	return dist < c1.r + c2.r;
-}
-
 
 
 d3.select('body').select('.scoreboard')
@@ -112,68 +81,82 @@ d3.select('.container').style('margin-top','40px')
 var enemiesList = gameBoard.selectAll('circle.enemy');
 
 d3.select('.high').data([{highscore:0}])
-									//.attr('highscore', function(d) {return d.highscore;})
+                  //.attr('highscore', function(d) {return d.highscore;})
 d3.select('.current').data([{ current: 0}])
 d3.select('.collisions').data([{ collisions: 0}])
 
+
+
 d3.timer(function(){
-	//console.log('hi');
-	var player = gameBoard.select('circle.player').data()[0];
-	var enemies = gameBoard.selectAll("circle.enemy");
+  var player = gameBoard.select('circle.player').data()[0];
+  var enemies = gameBoard.selectAll("circle.enemy");
 
-	var high = d3.select('.high').data()[0].highscore;
-	d3.select('.high').select('span').text(Math.ceil(high));
+  d3.select('.high').select('span').text(Math.ceil(gameStats.highScore));
+  d3.select('.current').select('span').text(Math.ceil(gameStats.currentScore));
+  d3.select('.collisions').select('span').text(gameStats.collisions);
 
-	var current = d3.select('.current').data()[0].current;
-	d3.select('.current').select('span').text(Math.ceil(current));
+  gameStats.currentScore += .1;
 
-	var collisions = d3.select('.collisions').data()[0].collisions;
-	d3.select('.collisions').select('span').text(collisions);
 
-	d3.select('.current').attr('current', function(d){
-		d.current = d.current + .1;
-		return d.current;
-	})
-	d3.select('.high').attr('highscore', function(d){
-			if (d.highscore < current){
-				d.highscore = current;
-			}
-			return d.highscore;
-	})
+  if (gameStats.highScore < gameStats.currentScore){
+    gameStats.highScore = gameStats.currentScore;
+  }
 
-	var anyCollisions = false;
+  var anyCollisions = false;
 
-	enemies.each(function(){
+  enemies.each(function(){
 
-		var enemy = d3.select(this);
-		var enemyCircle = {
-			x:parseFloat(enemy.attr('cx')),
-			y:parseFloat(enemy.attr('cy')),
-			r: gameOptions.enemyRadius
-		}
+    var enemy = d3.select(this);
+    var enemyCircle = {
+      x:parseFloat(enemy.attr('cx')),
+      y:parseFloat(enemy.attr('cy')),
+      r: gameOptions.enemyRadius
+    }
 
-		if (collision(player, enemyCircle)) {
+    if (collision(player, enemyCircle)) {
+      anyCollisions = true;
+    }
+  });
 
-			anyCollisions = true;
-
-		}
-
-	});
-
-	if(anyCollisions  && !gameOptions.colliding) {
-		gameOptions.colliding = true;
-		d3.select('.current').attr('current', function(d) {
-			d.current = 0;
-		})
+  if(anyCollisions  && !gameStats.colliding) {
+    gameStats.colliding = true;
+    gameStats.currentScore = 0;
+  
     
     d3.select('.collisions').attr('collisions', function(d) {
-    	d.collisions ++;
+      gameStats.collisions++;
+      gameBoard.style("background-color","red");
     });
   } else if (!anyCollisions) {
-  	gameOptions.colliding = false;
+    gameStats.colliding = false;
+    gameBoard.style("background-color", "blue");
   }
 
 });
+
+var collision = function(c1, c2) {
+  var dist = Math.sqrt( Math.pow( (c1.x - c2.x), 2) + Math.pow( (c1.y - c2.y), 2) );
+  return dist < c1.r + c2.r;
+}
+
+var update = function(pieces) {
+            pieces
+           .transition()
+           .duration(1000)
+           .attr("cx", function(d){
+            var x = Math.random()*gameOptions.width;
+            d.x = x;
+            return x;})
+           .attr("cy", function(d){
+            var y = Math.random()*gameOptions.height;
+            d.y = y;
+            return y;})
+           .each('end', function() {
+                    update(d3.select(this));
+           })
+           
+
+}
 
 update(enemiesList);
 
